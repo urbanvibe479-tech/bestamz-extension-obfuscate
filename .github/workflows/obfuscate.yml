@@ -1,0 +1,57 @@
+name: Obfuscate Extension
+
+on:
+  workflow_dispatch:
+
+jobs:
+  obfuscate:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: '20'
+
+      - name: Install obfuscator globally
+        run: npm install -g javascript-obfuscator
+
+      - name: Prepare dist folder
+        run: |
+          mkdir -p dist
+          cp manifest.json dist/
+          cp loading.html dist/
+          cp logo.png dist/
+          cp Loading.gif dist/
+
+      - name: Obfuscate backgroundservice.bundle.js
+        run: |
+          javascript-obfuscator backgroundservice.bundle.js \
+            --output dist/backgroundservice.bundle.js \
+            --config obfuscator.json
+
+      - name: Obfuscate master.bundle.js
+        run: |
+          javascript-obfuscator master.bundle.js \
+            --output dist/master.bundle.js \
+            --config obfuscator.json
+
+      - name: Obfuscate loading.bundle.js
+        run: |
+          javascript-obfuscator loading.bundle.js \
+            --output dist/loading.bundle.js \
+            --config obfuscator.json
+
+      - name: Zip result
+        run: |
+          cd dist
+          zip -r ../extension-obfuscated.zip .
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: extension-obfuscated
+          path: extension-obfuscated.zip
